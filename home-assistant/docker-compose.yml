@@ -1,0 +1,18 @@
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+      - ${HA_CONFIG}:/config
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    network_mode: host
+
+  tunnel:
+    container_name: homeassistant-cloudflared-tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    network_mode: host
+    environment:
+        - TUNNEL_TOKEN=${HA_CF_TUNNEL_TOKEN}
