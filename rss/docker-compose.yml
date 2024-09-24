@@ -1,0 +1,15 @@
+services:
+  rss:
+    container_name: rss
+    image: mskrzypietz/rss:1.0.15
+    restart: unless-stopped
+    environment:
+        - DB_URL=${DB_URL}
+
+  tunnel:
+    container_name: rss-cloudflared-tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+        - TUNNEL_TOKEN=${RSS_CF_TUNNEL_TOKEN}
