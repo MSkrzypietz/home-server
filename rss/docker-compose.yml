@@ -1,10 +1,13 @@
 services:
   rss:
     container_name: rss
-    image: mskrzypietz/rss:1.0.15
+    image: mskrzypietz/rss:1.0.29
     restart: unless-stopped
+    volumes:
+      - logs:/app
     environment:
         - DB_URL=${DB_URL}
+        - ORIGIN_URL=${ORIGIN_URL}
 
   tunnel:
     container_name: rss-cloudflared-tunnel
@@ -13,3 +16,41 @@ services:
     command: tunnel run
     environment:
         - TUNNEL_TOKEN=${RSS_CF_TUNNEL_TOKEN}
+    depends_on:
+      - rss
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+    depends_on:
+      - rss
+
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - logs:/var/log/app
+      - promtail-data:/tmp
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+
+volumes:
+  logs:
+  loki-data:
+  promtail-data:
+  grafana-data:
