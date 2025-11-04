@@ -1,0 +1,20 @@
+services:
+  note:
+    container_name: note
+    image: mskrzypietz/note:latest
+    restart: unless-stopped
+    ports:
+      - 8084:8080
+    environment:
+        - MONGO_CONNECTION_URI=${MONGO_CONNECTION_URI}
+        - API_KEYS=${API_KEYS}
+
+  tunnel:
+    container_name: note-cloudflared-tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+        - TUNNEL_TOKEN=${NOTE_CF_TUNNEL_TOKEN}
+    depends_on:
+      - note
