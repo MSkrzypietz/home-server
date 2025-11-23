@@ -1,13 +1,17 @@
 services:
   rss:
     container_name: rss
-    image: mskrzypietz/rss:1.0.37
+    image: mskrzypietz/rss:1.0.42
     restart: unless-stopped
+    depends_on:
+      - nats
     volumes:
       - logs:/app/logs
     environment:
         - DB_URL=${DB_URL}
         - ORIGIN_URL=${ORIGIN_URL}
+        - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+        - NATS_CONNECTION_STRING=${NATS_CONNECTION_STRING}
 
   tunnel:
     container_name: rss-cloudflared-tunnel
@@ -49,8 +53,20 @@ services:
     depends_on:
       - loki
 
+  nats:
+    image: nats:2
+    container_name: nats-server
+    ports:
+      - "8222:8222"
+    command: ["--js", "--store_dir=/data", "-m", "8222"]
+    volumes:
+      - nats-data:/data
+    restart: unless-stopped
+
 volumes:
   logs:
   loki-data:
   promtail-data:
   grafana-data:
+  nats-data:
+
